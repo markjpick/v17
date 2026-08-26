@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#1E8A9B">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Austral Wash Bay</title>
+	<link href="styles.css" rel="stylesheet">
+
+</head>
+<body>
+<div id="app">
+
+  <div class="topbar">
+  <button class="iconbtn" id="backBtn" aria-label="Back to menu">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" id="backIcon"></svg>
+  </button>
+  <h1 id="topTitle">Car Wash Routine</h1>
+  <div style="display: flex; gap: 8px;">
+    <button class="iconbtn" id="infoBtn" aria-label="Chemical Cheat Sheet">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="16" x2="12" y2="12"></line>
+        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+      </svg>
+    </button>
+    <button class="iconbtn" id="calcBtn" aria-label="Dilution Calculator">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10 2v7.31a2 2 0 0 1-.29.98L4.14 19.4A2 2 0 0 0 5.81 22h12.38a2 2 0 0 0 1.67-2.6l-5.57-9.11a2 2 0 0 1-.29-.98V2"/>
+        <path d="M8.5 2h7M7 16h10"/>
+      </svg>
+    </button>
+    <button class="iconbtn" id="fullscreenBtn" aria-label="Toggle fullscreen" onclick="toggleFullScreen()"></button>
+
+    <button class="iconbtn" id="themeBtn" aria-label="Toggle theme"></button>
+  </div>
+</div>
+
+  <div id="home">
+    <div class="hero-eyebrow">Renault Austral · YA24UGM</div>
+    <h2 class="hero-title">Car Wash routine</h2>
+    <!--p class="hero-sub">Pick a schedule below;</p-->
+
+    <div id="remindersWrap"></div>
+
+    <div class="schedule-row">
+      <button class="schedule-card sc-a" id="cardTen">
+        <div class="badge">
+          <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="24" r="16"/><path d="M24 15v9l6 4"/></svg>
+        </div>
+        <p class="sc-title">Regular Wash</p>
+      </button>
+
+      <button class="schedule-card sc-b" id="cardDeep">
+        <div class="badge">
+          <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M24 6l14 6v10c0 10-6 17-14 20-8-3-14-10-14-20V12l14-6z"/></svg>
+        </div>
+        <p class="sc-title">Deep Clean</p>
+      </button>
+    </div>
+
+    <div id="weatherCard" class="wx-card">
+      <div id="weatherDetails">
+        <div class="wx-empty-msg">Loading wash conditions...</div>
+      </div>
+    </div>
+
+    <div class="cal-card">
+      <div class="cal-head">
+        <p class="section-label">Next 14 Days</p>
+        <div class="cal-legend">
+          <span><i class="cal-dot green"></i>Good</span>
+          <span><i class="cal-dot orange"></i>OK</span>
+          <span><i class="cal-dot red"></i>Poor</span>
+        </div>
+      </div>
+      <div class="cal-weekdays"><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div><div>S</div></div>
+      <div class="cal-grid" id="calGrid"></div>
+      <p class="cal-foot-note" id="calFootNote"></p>
+    </div>
+
+    <!-- Add Log Book trigger on home screen -->
+    <button class="schedule-card" id="logBookBtn" style="border-style:dashed;">
+      <div class="badge" style="background:var(--surface-2); color:var(--text);">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      </div>
+      <div>
+        <p class="sc-title">Wash Log Book</p>
+        <p class="sc-meta" id="lastWashMeta">No recent washes logged</p>
+      </div>
+    </button>
+
+    <div class="cal-card" id="productMetersCard">
+      <p class="section-label" style="margin-bottom:10px;">Product Protection</p>
+      <div id="productMeters"></div>
+    </div>
+
+  </div>
+
+  <div id="deepCleanSelect" class="hidden">
+    <div class="hero-eyebrow">Wash Setup</div>
+    <h2 class="hero-title">What are you doing today?</h2>
+    <p class="hero-sub">Adjust anything below - steps you don't need are skipped automatically.</p>
+
+    <div id="setupGroups"></div>
+
+    <div id="deepCleanSelectFoot">
+      <button class="finish-btn" id="beginDeepCleanBtn">Begin Wash</button>
+    </div>
+  </div>
+
+  <div id="stepScreen" class="hidden">
+    <div class="progress-wrap">
+      <div class="progress-track" id="progressTrack"></div>
+      <div class="progress-label"><span id="progPhase">Phase</span><span id="progFrac" class="num">1 / 1</span></div>
+    </div>
+
+    <div class="carousel-viewport" id="carouselViewport">
+      <div class="carousel-track" id="carouselTrack"></div>
+    </div>
+    
+    <div class="scroll-cue hidden" id="scrollCue">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+
+    <!--div class="step-counter num" id="stepCounter">Step 1 of 20</div>
+    <div class="navbar">
+      <button class="navbtn" id="prevBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+        Back
+      </button>
+      <button class="navbtn primary" id="nextBtn">
+        Next
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+    </div-->
+  </div>
+
+  <div id="doneScreen" class="hidden">
+    <div class="dbadge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></div>
+    <h2>Wash completed</h2>
+    <p id="doneText">Nice work - every step in this schedule is done.</p>
+    <div id="reviewListWrap">
+      <p class="cal-foot-note" id="reviewListNote" style="text-align:center; margin:0 0 8px;"></p>
+      <div id="reviewList"></div>
+    </div>
+    <div class="navbar" style="border:none; padding:0; width:100%; max-width:280px;">
+      <button class="navbtn" id="reviewBtn">Review steps</button>
+      <button class="navbtn primary" id="doneHomeBtn">Done</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- Log Book Modal -->
+<div id="logModal" class="hidden">
+  <div class="modal-card">
+    <h3>Wash Log</h3>
+
+    <div style="display:flex; gap:8px; margin:14px 0 4px;">
+      <button class="navbtn" id="exportLogsBtn" style="flex:1;">Export JSON</button>
+      <button class="navbtn" id="importLogsBtn" style="flex:1;">Import JSON</button>
+      <input type="file" id="importLogsInput" accept="application/json,.json" class="hidden">
+    </div>
+    <p style="font-size:10.5px; color:var(--text-dim); margin:4px 0 0; line-height:1.4;">Export saves a backup .json file you can keep somewhere safe (cloud drive, email to self). Import adds washes from a backup file back into this log - duplicates are skipped automatically.</p>
+
+    <p style="font-size:12px; font-weight:700; margin-bottom:6px; margin-top:14px;">PAST WASHES</p>
+    <div id="logList" style="max-height:260px; overflow-y:auto; display:flex; flex-direction:column; gap:8px;"></div>
+    
+    <p style="text-align:center; font-size:12px; color:var(--text-dim); margin-top:15px; margin-bottom:0;">Tap anywhere outside to close</p>
+  </div>
+</div>
+
+<!-- Day Hourly Modal -->
+<div id="dayModal" class="hidden">
+  <div class="modal-card">
+    <h3 id="dayModalTitle">Hourly outlook</h3>
+    <div id="dayModalBody" style="margin-top:12px;"></div>
+    <p style="text-align:center; font-size:12px; color:var(--text-dim); margin-top:15px; margin-bottom:0;">Tap anywhere outside to close</p>
+  </div>
+</div>
+
+<!-- Dilution Modal -->
+<div id="calcModal" class="hidden">
+  <div class="modal-card">
+    <h3>Dilution Calculator</h3>
+    <div style="display:flex; flex-direction:column; gap:12px; margin-top:12px;">
+      <label style="font-size:12px; font-weight:700;">PRODUCT
+        <select id="calcProduct" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--surface-2); color:var(--text); margin-top:4px;">
+          <option value="bh_touchless">Bilt Hamber Touch-Less</option>
+          <option value="bh_surfex">Bilt Hamber Surfex-HD</option>
+          <option value="bh_qd">Bilt Hamber Auto-QD</option>
+          <option value="bh_wash">Bilt Hamber Auto-Wash</option>
+          <option value="bh_touchon">Bilt Hamber Touch-On</option>
+        </select>
+      </label>
+
+      <label style="font-size:12px; font-weight:700;">RATIO
+        <select id="calcRatio" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--surface-2); color:var(--text); margin-top:4px;"></select>
+      </label>
+
+      <label style="font-size:12px; font-weight:700;">CONTAINER SIZE (ml)
+        <input type="number" id="calcSize" value="400" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--surface-2); color:var(--text); margin-top:4px;">
+      </label>
+
+      <div id="calcResult" style="padding:12px; background:var(--surface-2); border-radius:10px; border:1px solid var(--border); font-size:13.5px; line-height:1.5; margin-top:6px;"></div>
+    </div>
+    <p style="text-align:center; font-size:12px; color:var(--text-dim); margin-top:15px; margin-bottom:0;">Tap anywhere outside to close</p>
+  </div>
+</div>
+
+<div id="infoModal" class="hidden">
+  <div class="modal-card">
+    <h3>Chemical Usage Rules</h3>
+    <div class="step-body">
+      <p><b>DO NOT USE:</b></p>
+      <ul>
+        <li><span class="product_BH">Bilt Hamber Auto-QD (1:20)</span> on Glass, mirrors, or alloy wheels</li>
+        <li><span class="product_rainx">Rain-X</span> on Side mirrors, unpainted black plastics, or bodywork</li>
+        <li><span class="product_BH">Bilt Hamber Auto-Korrosol</span> on Grill meshes, badges, seals, or hot surfaces</li>
+        <li><span class="product_Autoglym_carGlass">Autoglym Car Glass Polish</span> on Plastic trim, window surrounds, or screens</li>
+      </ul>
+      <p><b>ALWAYS DILUTE:</b></p>
+      <ul>
+          <li><span class="product_BH">Bilt Hamber Auto-QD</span>: ALWAYS 1:20 (24ml/25g for 476ml/476g Distilled water)</li>
+          <li><span class="product_BH">Bilt Hamber Surfex-HD</span>: ALWAYS 1:10 (45ml/48g for 455ml/455g tap water) for arches, tyres &amp; jambs, Can be diluted further 1:100 to be used on interior vinyl, dashboard plastics, steering wheels, leather (spot testing first), and light fabric upholstery stains</li>
+          <li><span class="product_BH">Bilt Hamber Touch-Less</span>: 1:15 for weekly (25ml for 375ml warm tap water), 1:5 for deep clean (67ml for 333ml warm tap water)</li>
+          <li><span class="product_BH">Bilt Hamber Auto-Wash</span>: 1:2000 (1 tsp/5ml/5g per 10L/10kg warm tap water)</li>
+      </ul>
+      <p><b>NEVER DILUTE:</b></p>
+      <ul>
+        <li><span class="product_Autoglym_fastGlass">Autoglym Fast Glass</span></li>
+        <li><span class="product_Autoglym_carGlass">Autoglym Car Glass Polish</span></li>
+        <li><span class="product_rainx">Rain-X</span></li>
+        <li><span class="product_Autoglym_tyreDressing">Autoglym Instant Tyre Dressing</span></li>
+        <li><span class="product_BH">Bilt Hamber Auto-Wheel</span></li>
+        <li><span class="product_BH">Bilt Hamber Auto-Korrosol</span></li>
+      </ul>
+    </div>
+    <p style="text-align:center; font-size:12px; color:var(--text-dim); margin-top:15px; margin-bottom:0;">Tap anywhere to close</p>
+  </div>
+</div>
+
+
+    <script src="constants.js"></script>
+    <script src="app.js"></script>
+
+<script>
+
+
+// Initialise
+renderLogs();
+renderProductMeters();
+updateReminders();
+fetchWashWeather();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+The options within the body section work great, but I would like to extend it to be able to do something like this.
+
+{ noTurtle, noTouchon : 'xxxxxxxxx'},
+{ turtle : 'xxxxx' },
+{ touchon : 'xxxxx }
+
+This would check if touch-on was applied either at the wash selection screen, or on the touch-on yes/no screen.
+
+
+
+--------------
+
+
+Major modification.
+
+The touchOn / turtle wax thing is causing some major confusions with the application.
+Lets just move the touch-on radio button to the wash selection page permanently. Remove the touch-on decision process in-line instruction completely (keep the code available if something else could use it in future).
+This just makes the touch-on product the same as turtle wax, and rainx.  Since it is a coating, only 1 can ever be selected, so it is just a coating product like turtle wax.
+
+I should still be able to select touch-on or turtle wax if I choose. But the boxes should give clear information about days left before needing
+reapplication. This change is really because it is now time based for both products, whereas I assumed it should be visual, based on the look of water on the car.
+I have made some crude modifications to the styles, now the wash selection radio options are colour coded (green/orange/red) to visually highlight
+the current stage of this product before I start a wash.
+
+Let me run through the order of things and lets see if the app can be modified to accommodate this;
+apply turtle wax -> orange warning 30 days before reapply -> red warning 10 days before reapply -> 0days/overdue flashing red warning
+after 40 days of turtle wax -> apply touch-on -> orange warning 14 days before reapply -> red warning 7 days before reapply -> 0days/overdue flashing red warning.
+turtle wax reapplication 180 days, touch-on reapplication 40 days.
+
+Since I don't want to be without any protection on the car at all the turtle wax cycle should fall in line with the last touch-on cycle if within the 30 day orange window.
+If there was still 35 days left before I reapply turtle wax, and the touch-on needs reapplying now.  If I wait for 35 days then the car will be without
+any coating for 35 days. This can't happen. So I should still apply the touch-on. Then, when the next touch-on application is required in 40 days the app
+should inform me that it is now a safe time to apply a fresh turtle wax coating.
+
+If I need to reapply touch-on, but see there is only 30 days (or less) before the turtle wax needs reapplying the app should highlight this wash should "Just reapply turtle wax
+now, 30 days early.".
+
+I should never apply turtle wax until at least 40 days after touch-on. Reapplying a fresh turtle wax coating can happen upto 30 days before the 180 day timer.
+
+
+Since both of these are now coating options, can the body text change to incorporate something like
+
+{ noCoating : 'Text to display if no coatings are applied this wash'},
+{ turtle : 'Text to display if turtle wax is applied this wash' },
+{ touchon : 'Text to display if touch-on is applied this wash }
+
+Can the warning box (below body) also be able to take parameters like this.
