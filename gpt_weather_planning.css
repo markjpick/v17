@@ -1,0 +1,24 @@
+/* Weather planning dashboard — intentionally separate from the main stylesheet. */
+.weather-planning{margin:1rem 0 1.25rem;padding:1rem;border:1px solid rgba(255,255,255,.09);border-radius:24px;background:linear-gradient(145deg,rgba(19,24,38,.96),rgba(10,13,22,.98));box-shadow:0 16px 45px rgba(0,0,0,.25);overflow:hidden}
+.weather-planning .planning-head{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:.8rem}
+.weather-planning .eyebrow{display:block;font-size:.62rem;font-weight:900;letter-spacing:.16em;opacity:.62;margin-bottom:.3rem}
+.weather-planning h3{margin:0;font-size:1.08rem;line-height:1.2}
+.weather-planning p{margin:.35rem 0 0;color:#aeb7ca;font-size:.75rem;line-height:1.4}
+.planning-mark{display:grid;place-items:center;flex:0 0 38px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.06);font-size:1.3rem;font-weight:900}
+.weather-recommendation{display:flex;align-items:center;justify-content:space-between;gap:.75rem;padding:.8rem .9rem;margin:.8rem 0;border-radius:17px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.035)}
+.weather-recommendation.good{border-color:rgba(67,230,159,.35);background:rgba(67,230,159,.07)}
+.weather-recommendation.maybe{border-color:rgba(255,190,70,.35);background:rgba(255,190,70,.07)}
+.weather-recommendation.poor{border-color:rgba(255,90,110,.25);background:rgba(255,90,110,.05)}
+.weather-recommendation strong{display:block;font-size:.82rem}
+.weather-recommendation p{font-size:.68rem;margin-top:.25rem}
+.rec-score{display:grid;place-items:center;flex:0 0 40px;width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.1);font-size:.72rem;font-weight:900}
+.forecast-strip{display:flex;gap:.55rem;overflow-x:auto;padding:.2rem .1rem .45rem;scroll-snap-type:x mandatory;scrollbar-width:none}
+.forecast-strip::-webkit-scrollbar{display:none}
+.forecast-day{position:relative;flex:0 0 92px;min-height:122px;padding:.65rem .5rem;border:1px solid rgba(255,255,255,.065);border-radius:17px;background:rgba(255,255,255,.025);display:flex;flex-direction:column;align-items:center;gap:.18rem;scroll-snap-align:start;transition:transform .2s ease,border-color .2s ease,background .2s ease}
+.forecast-day small{font-size:.59rem;font-weight:800;color:#aab3c5;white-space:nowrap}
+.forecast-day i{font-style:normal;font-size:1.35rem;line-height:1.35;margin:.15rem 0}
+.forecast-day strong{font-size:.95rem}
+.forecast-day span{font-size:.55rem;color:#8f99ad;text-align:center;white-space:nowrap}
+.forecast-day.target{border-color:rgba(255,255,255,.4);background:linear-gradient(160deg,rgba(255,255,255,.1),rgba(255,255,255,.035));transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.18)}
+.target-badge{position:absolute;bottom:5px;left:4px;right:4px;text-align:center;font-size:.43rem;letter-spacing:.06em;color:#fff}
+@media(max-width:420px){.weather-planning{border-radius:20px;padding:.85rem}.forecast-day{flex-basis:86px}}
