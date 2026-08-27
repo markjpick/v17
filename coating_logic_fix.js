@@ -94,8 +94,6 @@
     snowFoamDeep: sel => sel.snowFoam === 'deep'
   };
 
-  /* app.js declares this object before this compatibility file loads. Replace its
-     coating vocabulary with the final vocabulary agreed for the application. */
   Object.keys(CONDITIONAL_PREDICATES).forEach(key => {
     if(key === 'noTurtle' || key === 'noTouchon') delete CONDITIONAL_PREDICATES[key];
   });
@@ -116,27 +114,79 @@
       .filter(item => item !== null && item !== undefined && item !== '');
   }
 
+  /* A shared status note for instruction screens. It deliberately reuses the exact
+     dueInfoHtml()/dueInfoClass() functions used by the setup screen, so the colour,
+     state and days remaining stay consistent in both places. */
+  function productStatusNote(productKey){
+    if(!productKey) return '';
+    return `<div class="instruction-product-status ${dueInfoClass(productKey)}">${dueInfoHtml(productKey)}</div>`;
+  }
+
   /* app.js already handles body arrays. Its warning renderer expects a single string,
-     so resolve warning arrays temporarily before buildCarousel renders them. */
+     so resolve warning arrays temporarily before buildCarousel renders them. Also add
+     the shared product-status note to the first instruction of each coating/application
+     section. This avoids duplicating the selection-screen status logic in constants.js. */
   const oldBuildCarousel = buildCarousel;
   buildCarousel = function(){
     if(!currentSchedule) return oldBuildCarousel();
-    const originals = currentSchedule.steps.map(step => ({ step, warning: step.warning }));
+
+    const originals = currentSchedule.steps.map(step => ({
+      step,
+      warning: step.warning,
+      noteFn: step.noteFn
+    }));
+
     currentSchedule.steps.forEach(step => {
       if(Array.isArray(step.warning)) {
         const items = resolveInfoArray(step.warning, washSelections);
         step.warning = items.map(item => `<div>${item}</div>`).join('');
       }
+
+      /* Touch-On application: show the same status pill/banner used on Wash Setup. */
+      if(step.phase === 'Touch-On' && step.title === 'Touch-On application') {
+        const existing = step.noteFn;
+        step.noteFn = sel => {
+          const status = productStatusNote('touchon');
+          const existingNote = typeof existing === 'function' ? existing(sel) : '';
+          return status + existingNote;
+        };
+      }
+
+      /* Turtle Wax: first application instruction gets the same status display. */
+      if(step.phase === 'Turtle Wax Ceramic Coating' && step.title === 'Start with Bodywork') {
+        const existing = step.noteFn;
+        step.noteFn = sel => {
+          const status = productStatusNote('turtlewax');
+          const existingNote = typeof existing === 'function' ? existing(sel) : '';
+          return status + existingNote;
+        };
+      }
+
+      /* Rain-X: only the first instruction in the Rain-X: Application phase gets
+         the status display, as requested. */
+      if(step.phase === 'Rain-X: Application' && step.title === 'Check the glass') {
+        const existing = step.noteFn;
+        step.noteFn = sel => {
+          const status = productStatusNote('rainx');
+          const existingNote = typeof existing === 'function' ? existing(sel) : '';
+          return status + existingNote;
+        };
+      }
     });
+
     try {
       return oldBuildCarousel();
     } finally {
-      originals.forEach(x => { x.step.warning = x.warning; });
+      originals.forEach(x => {
+        x.step.warning = x.warning;
+        x.step.noteFn = x.noteFn;
+      });
     }
   };
 
   window.AustralConditionalInfo = {
     keys: Object.keys(predicates),
-    resolve: resolveInfoArray
+    resolve: resolveInfoArray,
+    productStatusNote
   };
 })();
