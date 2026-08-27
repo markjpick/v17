@@ -72,4 +72,27 @@
         ? '<b>Rain-X due</b> — it is now inside the 90-120 day reapplication window.'
         : `<b>Rain-X coming up</b> — around ${90 - rain.daysSince} days until the 90-day reapplication window.`;
   };
+
+  /* ================= CONDITIONAL INSTRUCTION INFORMATION =================
+     A body/warning can be an ordered array of information items. Plain strings are
+     always shown. A single-key object such as {wheelsDeep:'...'} is shown only when
+     that condition is true. This keeps optional information inline with the ordinary
+     instruction instead of replacing or duplicating the whole instruction.
+
+     Coating keys are deliberately named noCoating, turtle and noTouchon. Other
+     conditional information keys are independent and may be combined in the same
+     instruction: rainx/noRainx, claybarTarRemoval, wheelsDeep, ironFallout,
+     snowFoamRegular and snowFoamDeep. */
+  if (typeof CONDITIONAL_PREDICATES !== 'undefined') {
+    CONDITIONAL_PREDICATES.noCoating = sel => sel.coating === 'none';
+    CONDITIONAL_PREDICATES.turtle = sel => sel.coating === 'turtlewax';
+    CONDITIONAL_PREDICATES.noTouchon = sel => sel.coating !== 'touchon';
+    CONDITIONAL_PREDICATES.rainx = sel => sel.glass === 'rainx';
+    CONDITIONAL_PREDICATES.noRainx = sel => sel.glass !== 'rainx';
+    CONDITIONAL_PREDICATES.claybarTarRemoval = sel => !!sel.claybarTarRemoval;
+    CONDITIONAL_PREDICATES.wheelsDeep = sel => !!sel.wheelsDeep;
+    CONDITIONAL_PREDICATES.ironFallout = sel => !!sel.ironFallout;
+    CONDITIONAL_PREDICATES.snowFoamRegular = sel => sel.snowFoam === 'regular';
+    CONDITIONAL_PREDICATES.snowFoamDeep = sel => sel.snowFoam === 'deep';
+  }
 })();
