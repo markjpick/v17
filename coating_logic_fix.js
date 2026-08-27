@@ -42,8 +42,6 @@
       ? `<div class="meter-row"><div class="meter-top"><span class="meter-name">Rain-X</span><span class="meter-last">Never logged</span></div><div class="meter-track"><div class="meter-fill" style="width:0%;background:var(--border);"></div></div></div>`
       : `<div class="meter-row"><div class="meter-top"><span class="meter-name">Rain-X</span><span class="meter-last">${rain.state === 'overdue' ? `${rain.daysSince - 120}d overdue` : `${Math.max(0, 90 - rain.daysSince)}d to window`}</span></div><div class="meter-track"><div class="meter-fill" style="width:${Math.max(0, Math.min(100, 100 * (1 - rain.daysSince / 120)))}%;background:var(--${rain.state === 'overdue' ? 'warn' : rain.state === 'soon' || rain.state === 'due' ? 'amber' : 'good'});"></div></div><p class="meter-tier" style="color:var(--text-dim);">Last applied ${new Date(rain.last).toLocaleDateString()}</p></div>`;
 
-    /* Render the coating meters using the already-overridden model, then replace the
-       Rain-X slot with the compatible original 90-120 day display. */
     oldMeters();
     const rows = wrap.querySelectorAll('.meter-row');
     const labels = Array.from(rows).map(r => r.querySelector('.meter-name')?.textContent);
@@ -59,8 +57,6 @@
     if(!wrap) return;
     const rain = getProductStatus('rainx');
     if(!rain || rain.state === 'never' || rain.state === 'ok') return;
-    /* Replace only the Rain-X wording that the simplified reminder renderer cannot
-       derive from the old status object's min/max representation. */
     const blocks = Array.from(wrap.querySelectorAll('.overdue-banner'));
     const rainBlock = blocks.find(b => /Rain-X/.test(b.textContent));
     if(!rainBlock) return;
@@ -74,25 +70,66 @@
   };
 
   /* ================= CONDITIONAL INSTRUCTION INFORMATION =================
-     A body/warning can be an ordered array of information items. Plain strings are
+     A body or warning can be an ordered array of information items. Plain strings are
      always shown. A single-key object such as {wheelsDeep:'...'} is shown only when
      that condition is true. This keeps optional information inline with the ordinary
      instruction instead of replacing or duplicating the whole instruction.
 
-     Coating keys are deliberately named noCoating, turtle and noTouchon. Other
-     conditional information keys are independent and may be combined in the same
-     instruction: rainx/noRainx, claybarTarRemoval, wheelsDeep, ironFallout,
+     Coating keys: noCoating, turtle, noTouchon.
+     Other keys: rainx, noRainx, claybarTarRemoval, wheelsDeep, ironFallout,
      snowFoamRegular and snowFoamDeep. */
-  if (typeof CONDITIONAL_PREDICATES !== 'undefined') {
-    CONDITIONAL_PREDICATES.noCoating = sel => sel.coating === 'none';
-    CONDITIONAL_PREDICATES.turtle = sel => sel.coating === 'turtlewax';
-    CONDITIONAL_PREDICATES.noTouchon = sel => sel.coating !== 'touchon';
-    CONDITIONAL_PREDICATES.rainx = sel => sel.glass === 'rainx';
-    CONDITIONAL_PREDICATES.noRainx = sel => sel.glass !== 'rainx';
-    CONDITIONAL_PREDICATES.claybarTarRemoval = sel => !!sel.claybarTarRemoval;
-    CONDITIONAL_PREDICATES.wheelsDeep = sel => !!sel.wheelsDeep;
-    CONDITIONAL_PREDICATES.ironFallout = sel => !!sel.ironFallout;
-    CONDITIONAL_PREDICATES.snowFoamRegular = sel => sel.snowFoam === 'regular';
-    CONDITIONAL_PREDICATES.snowFoamDeep = sel => sel.snowFoam === 'deep';
+  const predicates = {
+    noCoating: sel => sel.coating === 'none',
+    turtle: sel => sel.coating === 'turtlewax',
+    noTouchon: sel => sel.coating !== 'touchon',
+    rainx: sel => sel.glass === 'rainx',
+    noRainx: sel => sel.glass !== 'rainx',
+    claybarTarRemoval: sel => !!sel.claybarTarRemoval,
+    wheelsDeep: sel => !!sel.wheelsDeep,
+    ironFallout: sel => !!sel.ironFallout,
+    snowFoamRegular: sel => sel.snowFoam === 'regular',
+    snowFoamDeep: sel => sel.snowFoam === 'deep'
+  };
+
+  Object.assign(CONDITIONAL_PREDICATES, predicates);
+
+  function resolveInfoArray(value, sel){
+    if(!Array.isArray(value)) return value;
+    return value
+      .map(item => {
+        if(item && typeof item === 'object' && !Array.isArray(item)) {
+          const keys = Object.keys(item);
+          if(keys.length === 1 && predicates[keys[0]]) {
+            return predicates[keys[0]](sel) ? item[keys[0]] : null;
+          }
+        }
+        return item;
+      })
+      .filter(item => item !== null && item !== undefined && item !== '');
   }
+
+  /* app.js already renders body arrays correctly. Its warning renderer expects a single
+     string, though, so wrap buildCarousel and resolve warning arrays in exactly the same
+     ordered-item fashion. */
+  const oldBuildCarousel = buildCarousel;
+  buildCarousel = function(){
+    if(!currentSchedule) return oldBuildCarousel();
+    const originals = currentSchedule.steps.map(step => ({ step, warning: step.warning }));
+    currentSchedule.steps.forEach(step => {
+      if(Array.isArray(step.warning)) {
+        const items = resolveInfoArray(step.warning, washSelections);
+        step.warning = items.map(item => `<div>${item}</div>`).join('');
+      }
+    });
+    try {
+      return oldBuildCarousel();
+    } finally {
+      originals.forEach(x => { x.step.warning = x.warning; });
+    }
+  };
+
+  window.AustralConditionalInfo = {
+    keys: Object.keys(predicates),
+    resolve: resolveInfoArray
+  };
 })();
