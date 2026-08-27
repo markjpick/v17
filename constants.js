@@ -193,7 +193,7 @@ const MASTER_STEPS = [
         'Fill 1 bucket with about 5-6 liters of luke warm tap water (rinse bucket) and grit guard.',
         '<span class="product_BH">Bilt Hamber Auto-Wash</span> with a 5ml measure (will mix with water later)',
         'Spray bottle with <span class="product_BH">Bilt Hamber Auto-QD</span> (diluted 1:20)',
-        { noTurtle: '30ml of <span class="product_BH">Bilt Hamber Touch-On</span> ready if needed, plus a container with 270ml water.' },
+        { touchon: '30ml of <span class="product_BH">Bilt Hamber Touch-On</span> ready if needed, plus a container with 270ml water.' },
         { rainx: '<span class="product_Autoglym_carGlass">Autoglym Car Glass Polish</span>' },
         { rainx: '<span class="product_rainx">Rain-X</span>' }
       ]
@@ -379,34 +379,10 @@ const MASTER_STEPS = [
     warning: 'Keep it really wet with water to help it glide, and only ever apply gentle pressure.<br><br>After using a clay bar, the paint is \'Exposed\' and needs to be sealed. Use Touch-On or Turtle Wax to seal it, or do before a full Turtle Wax/Touch-On application.'
   },
 
-  /* ---------- touch-on decision (skipped entirely if turtle wax chosen) ---------- */
-  {
-    phase: 'Touch-On', icon: 'spray', title: 'Does the car need Touch-On?',
-    type: 'decision',
-    /* v17: Touch-On is day-tracked (targetDays:40) like the other products. This mid-wash
-       decision is only offered during the 'soon' warning window (last ~10 of the 40 days)
-       and only when it isn't blocked by an imminent Turtle Wax reapplication - i.e. roughly
-       the situation that used to be called "3rd wash, nearly due". Once it's fully 'overdue'
-       it's pre-selected as a Coating option on the setup screen instead (sel.touchon is
-       already true by the time the wash starts), and this step is skipped. Too early
-       ('ok'/'never') also skips it - nothing to ask about yet. */
-    showIf: sel => sel.coating !== 'turtlewax' && sel.touchon !== true && sel.touchon !== false
-      && sel._touchon && (sel._touchon.state === 'soon' || sel._touchon.state === 'overdue') && !sel._touchon.blocked,
-    noteFn: sel => (sel._touchon && sel._touchon.state === 'soon')
-      ? `<div class="overdue-banner soon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9L2.6 18a1.7 1.7 0 001.5 2.5h16a1.7 1.7 0 001.5-2.5L13.7 3.9a1.7 1.7 0 00-3.4 0z"></path><path d="M12 9.5v4.2"></path><circle cx="12" cy="16.7" r="0.4" fill="currentColor" stroke="none"></circle></svg><p><b>Touch-On is nearly due</b> (last applied ${sel._touchon.daysSince !== null ? sel._touchon.daysSince + 'd ago' : 'never'})<br>Worth checking and applying now if the water isn't beading well.</p></div>`
-      : '',
-    noteFn: sel => (sel._touchon && sel._touchon.state === 'overdue')
-      ? `<div class="overdue-banner "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9L2.6 18a1.7 1.7 0 001.5 2.5h16a1.7 1.7 0 001.5-2.5L13.7 3.9a1.7 1.7 0 00-3.4 0z"></path><path d="M12 9.5v4.2"></path><circle cx="12" cy="16.7" r="0.4" fill="currentColor" stroke="none"></circle></svg><p><b>Touch-On reapplication due now</b><br>Last applied ${sel._touchon.daysSince !== null ? sel._touchon.daysSince + 'd ago' : 'never'}.<br>You should reapply today!</p></div>`
-      : '',
-
-    body: 'Look at how the water rinsed off the bodywork just now.',
-    yesLabel: 'Yes, apply it', noLabel: 'No, skip it',
-    yesSub: 'Water is beading wide, misshapen, or struggling to roll off',
-    noSub: 'Water is still beading tightly or running straight off'
-  },
+  
   {
     phase: 'Touch-On', icon: 'spray', title: 'Touch-On application',
-    section: 'touchon', showIf: sel => sel.coating !== 'turtlewax' && sel.touchon === true,
+    section: 'touchon', showIf: sel => sel.coating === 'touchon',
     noteFn: sel => (sel.coating === 'touchon' && sel._touchon)
       ? `<div class="overdue-banner "><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9L2.6 18a1.7 1.7 0 001.5 2.5h16a1.7 1.7 0 001.5-2.5L13.7 3.9a1.7 1.7 0 00-3.4 0z"></path><path d="M12 9.5v4.2"></path><circle cx="12" cy="16.7" r="0.4" fill="currentColor" stroke="none"></circle></svg><p><b>Touch-On reapplication due now</b><br>Last applied ${sel._touchon.daysSince !== null ? sel._touchon.daysSince + 'd ago' : 'never'}, applying today as scheduled.</p></div>`
       : '',
@@ -442,11 +418,16 @@ const MASTER_STEPS = [
   {
     phase: 'Drying', icon: 'spray', title: 'Dry panels with Mist aid',
     body: [
-      { noTurtle: 'Lightly mist <span class="product_BH">Bilt Hamber Auto-QD</span> (1:20 dilution) onto 1-2 wet panels at a time as a drying aid. Be aware that if <span class="product_BH">Bilt Hamber Touch-On</span> was applied earlier it acts as its own drying aid, and doesn\'t mix well, so NO NEED TO APPLY <span class="product_BH">Bilt Hamber Auto-QD</span>'},
+      { noCoating: 'Lightly mist <span class="product_BH">Bilt Hamber Auto-QD</span> (1:20 dilution) onto 1-2 wet panels at a time as a drying aid. Be aware that if <span class="product_BH">Bilt Hamber Touch-On</span> was applied earlier it acts as its own drying aid, and doesn\'t mix well, so NO NEED TO APPLY <span class="product_BH">Bilt Hamber Auto-QD</span>'},
       { turtle: 'You\'re applying <span class="product_turtleWax">Turtle Wax Ceramic Spray</span> after drying, so <b>DO NOT</b> use any <span class="product_BH">Bilt Hamber Auto-QD</span> here. It will negatively affect the bonding of the <span class="product_turtleWax">Turtle Wax Ceramic Spray</span>' },
+      { touchon: 'You\'ve applyed <span class="product_BH">Bilt Hamber Touch-On</span> already, so <b>DO NOT</b> use any <span class="product_BH">Bilt Hamber Auto-QD</span> here. These 2 products do NOT work well together, <span class="product_BH">Bilt Hamber Touch-On</span> will already act as a ceramic top-up and a drying aid.' },
       'Use the CarMax XXL Twisted Loop Towel to gently dry all bodywork and alloy wheels in long, smooth passes.'
     ],
-    warning: 'Remember not to use any <span class="product_BH">Bilt Hamber Auto-QD</span> on ANY glass/mirrors, or if used <span class="product_BH">Bilt Hamber Touch-On</span> this wash.'
+    warning: [
+      'Remember not to use any <span class="product_BH">Bilt Hamber Auto-QD</span> on ANY glass/mirror',
+      { touchon : 'or if used <span class="product_BH">Bilt Hamber Touch-On</span> this wash.'},
+      { turtle : 'or if using <span class="product_turtleWax">Turtle Wax Ceramic Spray</span> this wash.'}
+    ]
   },
   {
     phase: 'Drying', icon: 'towel', title: 'Dry Alloy Wheels',
