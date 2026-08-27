@@ -1,28 +1,32 @@
-/* Guided Wash Experience — presentation only; preserves existing wash engine. */
+/* Austral Wash Bay — Guided Wash Experience
+   Presentation layer only. The existing app.js remains responsible for the wash,
+   carousel navigation, conditional instructions and timer behaviour. */
 (function(){
 'use strict';
-const phaseIcon={
-  'Preparation':'▦','Wheels':'◉','Pre-Wash':'≈','Wash':'✦','Rinse':'◒',
-  'Drying':'◐','Touch-On':'⬡','Turtle Wax':'⬡','Rain-X':'◈','Finish':'✓'
-};
-function $(id){return document.getElementById(id)}
-function visible(el){const r=el&&el.getBoundingClientRect();return !!(r&&r.width&&r.height)}
-function makeRail(){if($('washRail'))return;const rail=document.createElement('div');rail.id='washRail';rail.className='wash-rail';rail.innerHTML='<div class="wash-rail-label">WASH JOURNEY</div><div id="washRailItems"></div>';const screen=$('stepScreen');if(screen)screen.insertBefore(rail,screen.firstChild)}
-function readSteps(){return Array.from(document.querySelectorAll('.step-slide')).filter(visible)}
-function currentStep(){const steps=readSteps();if(!steps.length)return null;const viewport=$('carouselViewport');if(!viewport)return steps[0];const centre=viewport.getBoundingClientRect().left+viewport.clientWidth/2;return steps.reduce((best,s)=>{const r=s.getBoundingClientRect();return Math.abs((r.left+r.width/2)-centre)<Math.abs((best.getBoundingClientRect().left+best.getBoundingClientRect().width/2)-centre)?s:best})}
-function phaseName(step){
-  if(!step)return 'Wash';
-  /* app.js renders the real phase as .phase-eyebrow. Older builds used .step-phase,
-     so retain that fallback for compatibility. */
-  const el=step.querySelector('.phase-eyebrow, .step-phase');
-  return el?el.textContent.trim():'Wash';
+const $=id=>document.getElementById(id);
+const ICONS={'Preparation':'▦','Wheels':'◉','Pre-Wash':'≈','Wash':'✦','Rinse':'◒','Drying':'◐','Touch-On':'⬡','Turtle Wax':'⬡','Rain-X':'◈','Finish':'✓'};
+function steps(){return Array.from(($('carouselTrack')||document.createElement('div')).querySelectorAll('.step-slide'));}
+function phase(s){const e=s&&s.querySelector('.phase-eyebrow');return e?e.textContent.trim():'Wash';}
+function active(){return ($('carouselTrack')||document.createElement('div')).querySelector('.step-slide.active');}
+function ensureJourney(){
+ const screen=$('stepScreen');if(!screen)return;
+ if(!$('washJourney')){const j=document.createElement('div');j.id='washJourney';j.className='wash-journey';j.innerHTML='<div class="wj-top"><span class="wj-kicker">WASH JOURNEY</span><span id="wjProgress">01 / 01</span></div><div id="wjRail" class="wj-rail"></div>';screen.insertBefore(j,screen.firstChild)}
+ if(!$('guidedHud')){const h=document.createElement('div');h.id='guidedHud';h.className='guided-hud';h.innerHTML='<div class="gh-cell"><span>CURRENT PHASE</span><strong id="guidedPhaseNow">Wash</strong></div><div class="gh-divider"></div><div class="gh-cell right"><span>STEP</span><strong id="guidedStepFraction">01 / 01</strong></div>';screen.appendChild(h)}
 }
-function buildRail(){makeRail();const host=$('washRailItems'),steps=readSteps();if(!host||!steps.length)return;const phases=[];steps.forEach((s,i)=>{const p=phaseName(s);if(!phases.some(x=>x.name===p))phases.push({name:p,index:i})});host.innerHTML=phases.map((p,i)=>`<button class="rail-item ${i===0?'active':''}" data-index="${p.index}"><span>${phaseIcon[p.name]||'•'}</span><b>${p.name}</b></button>`).join('');host.querySelectorAll('.rail-item').forEach(b=>b.onclick=()=>{const step=steps[Number(b.dataset.index)];if(step)step.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'})})}
-function updateActive(){const step=currentStep();if(!step)return;const p=phaseName(step);document.querySelectorAll('.rail-item').forEach(b=>b.classList.toggle('active',b.querySelector('b').textContent===p));const phase=$('guidedPhaseNow');if(phase)phase.textContent=p;const currentIndex=Number(step.dataset.index||0);const count=readSteps().length;const fraction=$('guidedStepFraction');if(fraction)fraction.textContent=`${String(currentIndex+1).padStart(2,'0')} / ${String(count).padStart(2,'0')}`)}
-function enhanceCards(){readSteps().forEach((step,i)=>{if(step.dataset.guided)return;step.dataset.guided='1';const card=step.querySelector('.step-card')||step;const phase=phaseName(step);const header=document.createElement('div');header.className='guided-step-header';header.innerHTML=`<div class="guided-phase-icon">${phaseIcon[phase]||'•'}</div><div><span>NOW IN</span><strong>${phase}</strong></div><div class="guided-step-number">${String(i+1).padStart(2,'0')}</div>`;card.insertBefore(header,card.firstChild);const warning=card.querySelector('.step-warning,.callout');if(warning&&!warning.querySelector('.guided-warning-label'))warning.insertAdjacentHTML('afterbegin','<div class="guided-warning-label">⚠ ATTENTION</div>')})}
-function addMiniHud(){if($('guidedHud'))return;const hud=document.createElement('div');hud.id='guidedHud';hud.className='guided-hud';hud.innerHTML='<div><small>CURRENT PHASE</small><strong id="guidedPhaseNow">Wash</strong></div><div class="guided-hud-line"></div><div><small>STEP</small><strong id="guidedStepFraction">01 / 01</strong></div>';const screen=$('stepScreen');if(screen)screen.appendChild(hud)}
-function refresh(){enhanceCards();buildRail();updateActive();addMiniHud();updateActive()}
-const observer=new MutationObserver(()=>setTimeout(refresh,80));
-function init(){const track=$('carouselTrack');if(track)observer.observe(track,{childList:true,subtree:true});const viewport=$('carouselViewport');if(viewport)viewport.addEventListener('scroll',updateActive,{passive:true});refresh();setInterval(()=>{const s=$('stepScreen');if(s&&!s.classList.contains('hidden'))updateActive()},300)}
+function rebuild(){
+ ensureJourney();const list=steps(),rail=$('wjRail');if(!rail||!list.length)return;
+ const phases=[];list.forEach((s,i)=>{const p=phase(s);if(!phases.some(x=>x.name===p))phases.push({name:p,index:i})});
+ rail.innerHTML=phases.map((p,i)=>`<button type="button" class="wj-phase" data-index="${p.index}"><span class="wj-icon">${ICONS[p.name]||'•'}</span><span class="wj-name">${p.name}</span></button>`).join('');
+ rail.querySelectorAll('.wj-phase').forEach(b=>b.addEventListener('click',()=>{const s=list[Number(b.dataset.index)];if(s)s.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'})}));
+ list.forEach((s,i)=>{s.dataset.guidedIndex=i; if(!s.querySelector('.guided-card-head')){const head=document.createElement('div');head.className='guided-card-head';head.innerHTML=`<span class="guided-card-phase">${ICONS[phase(s)]||'•'} ${phase(s)}</span><span class="guided-card-number">${String(i+1).padStart(2,'0')}</span>`;s.insertBefore(head,s.firstChild)}});
+ update();
+}
+function update(){
+ const list=steps(),a=active();if(!list.length||!a)return;const i=list.indexOf(a),p=phase(a);
+ document.querySelectorAll('.wj-phase').forEach(b=>b.classList.toggle('active',Number(b.dataset.index)<=i&&Number(b.dataset.index)===list.findIndex(s=>phase(s)===p)));
+ document.querySelectorAll('.wj-phase').forEach(b=>b.classList.toggle('current',b.querySelector('.wj-name').textContent===p));
+ const pn=$('guidedPhaseNow');if(pn)pn.textContent=p;const f=$('guidedStepFraction');if(f)f.textContent=`${String(i+1).padStart(2,'0')} / ${String(list.length).padStart(2,'0')}`;const wp=$('wjProgress');if(wp)wp.textContent=`${String(i+1).padStart(2,'0')} / ${String(list.length).padStart(2,'0')}`;
+}
+function init(){const track=$('carouselTrack');if(!track)return;const mo=new MutationObserver(()=>{rebuild();update()});mo.observe(track,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});rebuild();setInterval(()=>{if($('stepScreen')&&!$('stepScreen').classList.contains('hidden'))update()},250)}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
