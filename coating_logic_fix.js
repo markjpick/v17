@@ -67,20 +67,7 @@
         : `<b>Rain-X coming up</b> — around ${90 - rain.daysSince} days until the 90-day reapplication window.`;
   };
 
-  /* ================= CONDITIONAL INFORMATION =================
-     An instruction body or warning may be an ordered array.
-     - Plain strings are always displayed.
-     - A one-key object is displayed only when that condition is true.
-     - Multiple conditional objects may appear together and in any order.
-
-     Coating conditions are intentionally only:
-       noCoating  = no coating selected
-       turtle     = Turtle Wax selected
-       touchon    = Touch-On selected
-
-     There is deliberately NO noTurtle and NO noTouchon condition. If neither coating
-     is selected, use noCoating. This avoids contradictory information when one coating
-     is selected and the other is not. */
+  /* Conditional body/warning information. */
   const predicates = {
     noCoating: sel => sel.coating === 'none',
     turtle: sel => sel.coating === 'turtlewax',
@@ -101,40 +88,26 @@
 
   function resolveInfoArray(value, sel){
     if(!Array.isArray(value)) return value;
-    return value
-      .map(item => {
-        if(item && typeof item === 'object' && !Array.isArray(item)) {
-          const keys = Object.keys(item);
-          if(keys.length === 1 && predicates[keys[0]]) {
-            return predicates[keys[0]](sel) ? item[keys[0]] : null;
-          }
+    return value.map(item => {
+      if(item && typeof item === 'object' && !Array.isArray(item)) {
+        const keys = Object.keys(item);
+        if(keys.length === 1 && predicates[keys[0]]) {
+          return predicates[keys[0]](sel) ? item[keys[0]] : null;
         }
-        return item;
-      })
-      .filter(item => item !== null && item !== undefined && item !== '');
+      }
+      return item;
+    }).filter(item => item !== null && item !== undefined && item !== '');
   }
 
-  /* A shared status note for instruction screens. It deliberately reuses the exact
-     dueInfoHtml()/dueInfoClass() functions used by the setup screen, so the colour,
-     state and days remaining stay consistent in both places. */
   function productStatusNote(productKey){
     if(!productKey) return '';
     return `<div class="instruction-product-status ${dueInfoClass(productKey)}">${dueInfoHtml(productKey)}</div>`;
   }
 
-  /* app.js already handles body arrays. Its warning renderer expects a single string,
-     so resolve warning arrays temporarily before buildCarousel renders them. Also add
-     the shared product-status note to the first instruction of each coating/application
-     section. This avoids duplicating the selection-screen status logic in constants.js. */
   const oldBuildCarousel = buildCarousel;
   buildCarousel = function(){
     if(!currentSchedule) return oldBuildCarousel();
-
-    const originals = currentSchedule.steps.map(step => ({
-      step,
-      warning: step.warning,
-      noteFn: step.noteFn
-    }));
+    const originals = currentSchedule.steps.map(step => ({step, warning:step.warning, noteFn:step.noteFn, showIf:step.showIf}));
 
     currentSchedule.steps.forEach(step => {
       if(Array.isArray(step.warning)) {
@@ -142,51 +115,38 @@
         step.warning = items.map(item => `<div>${item}</div>`).join('');
       }
 
-      /* Touch-On application: show the same status pill/banner used on Wash Setup. */
       if(step.phase === 'Touch-On' && step.title === 'Touch-On application') {
-        const existing = step.noteFn;
-        step.noteFn = sel => {
-          const status = productStatusNote('touchon');
-          const existingNote = typeof existing === 'function' ? existing(sel) : '';
-          return status + existingNote;
-        };
+        step.noteFn = sel => sel.coating === 'touchon' ? productStatusNote('touchon') : '';
       }
 
-      /* Turtle Wax: first application instruction gets the same status display. */
+      if(step.phase === 'Touch-On' && step.title === 'Rinse off') {
+        step.showIf = sel => sel.coating === 'touchon';
+      }
+
       if(step.phase === 'Turtle Wax Ceramic Coating' && step.title === 'Start with Bodywork') {
         const existing = step.noteFn;
         step.noteFn = sel => {
-          const status = productStatusNote('turtlewax');
+          const status = sel.coating === 'turtlewax' ? productStatusNote('turtlewax') : '';
           const existingNote = typeof existing === 'function' ? existing(sel) : '';
           return status + existingNote;
         };
       }
 
-      /* Rain-X: only the first instruction in the Rain-X: Application phase gets
-         the status display, as requested. */
       if(step.phase === 'Rain-X: Application' && step.title === 'Check the glass') {
         const existing = step.noteFn;
         step.noteFn = sel => {
-          const status = productStatusNote('rainx');
+          const status = sel.glass === 'rainx' ? productStatusNote('rainx') : '';
           const existingNote = typeof existing === 'function' ? existing(sel) : '';
           return status + existingNote;
         };
       }
     });
 
-    try {
-      return oldBuildCarousel();
-    } finally {
-      originals.forEach(x => {
-        x.step.warning = x.warning;
-        x.step.noteFn = x.noteFn;
-      });
+    try { return oldBuildCarousel(); }
+    finally {
+      originals.forEach(x => { x.step.warning=x.warning; x.step.noteFn=x.noteFn; x.step.showIf=x.showIf; });
     }
   };
 
-  window.AustralConditionalInfo = {
-    keys: Object.keys(predicates),
-    resolve: resolveInfoArray,
-    productStatusNote
-  };
+  window.AustralConditionalInfo = {keys:Object.keys(predicates), resolve:resolveInfoArray, productStatusNote};
 })();
