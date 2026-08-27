@@ -1,6 +1,4 @@
-/* Small compatibility layer for the simplified coating model.
-   Rain-X keeps its original 90-120 day calculation in app.js; this layer supplies
-   the display fields that the new coating UI expects without changing Rain-X rules. */
+/* Compatibility layer for coating status plus ordered conditional information items. */
 (function(){
   'use strict';
 
@@ -24,6 +22,7 @@
     const rain = rainxDisplay(productKey);
     return rain !== null ? rain : oldDueInfoHtml(productKey);
   };
+
   dueInfoClass = function(productKey){
     if(productKey === 'rainx') {
       const st = getProductStatus('rainx');
@@ -41,7 +40,6 @@
     const rainHtml = rain.state === 'never'
       ? `<div class="meter-row"><div class="meter-top"><span class="meter-name">Rain-X</span><span class="meter-last">Never logged</span></div><div class="meter-track"><div class="meter-fill" style="width:0%;background:var(--border);"></div></div></div>`
       : `<div class="meter-row"><div class="meter-top"><span class="meter-name">Rain-X</span><span class="meter-last">${rain.state === 'overdue' ? `${rain.daysSince - 120}d overdue` : `${Math.max(0, 90 - rain.daysSince)}d to window`}</span></div><div class="meter-track"><div class="meter-fill" style="width:${Math.max(0, Math.min(100, 100 * (1 - rain.daysSince / 120)))}%;background:var(--${rain.state === 'overdue' ? 'warn' : rain.state === 'soon' || rain.state === 'due' ? 'amber' : 'good'});"></div></div><p class="meter-tier" style="color:var(--text-dim);">Last applied ${new Date(rain.last).toLocaleDateString()}</p></div>`;
-
     oldMeters();
     const rows = wrap.querySelectorAll('.meter-row');
     const labels = Array.from(rows).map(r => r.querySelector('.meter-name')?.textContent);
@@ -69,19 +67,24 @@
         : `<b>Rain-X coming up</b> — around ${90 - rain.daysSince} days until the 90-day reapplication window.`;
   };
 
-  /* ================= CONDITIONAL INSTRUCTION INFORMATION =================
-     A body or warning can be an ordered array of information items. Plain strings are
-     always shown. A single-key object such as {wheelsDeep:'...'} is shown only when
-     that condition is true. This keeps optional information inline with the ordinary
-     instruction instead of replacing or duplicating the whole instruction.
+  /* ================= CONDITIONAL INFORMATION =================
+     An instruction body or warning may be an ordered array.
+     - Plain strings are always displayed.
+     - A one-key object is displayed only when that condition is true.
+     - Multiple conditional objects may appear together and in any order.
 
-     Coating keys: noCoating, turtle, noTouchon.
-     Other keys: rainx, noRainx, claybarTarRemoval, wheelsDeep, ironFallout,
-     snowFoamRegular and snowFoamDeep. */
+     Coating conditions are intentionally only:
+       noCoating  = no coating selected
+       turtle     = Turtle Wax selected
+       touchon    = Touch-On selected
+
+     There is deliberately NO noTurtle and NO noTouchon condition. If neither coating
+     is selected, use noCoating. This avoids contradictory information when one coating
+     is selected and the other is not. */
   const predicates = {
     noCoating: sel => sel.coating === 'none',
     turtle: sel => sel.coating === 'turtlewax',
-    noTouchon: sel => sel.coating !== 'touchon',
+    touchon: sel => sel.coating === 'touchon',
     rainx: sel => sel.glass === 'rainx',
     noRainx: sel => sel.glass !== 'rainx',
     claybarTarRemoval: sel => !!sel.claybarTarRemoval,
@@ -91,6 +94,11 @@
     snowFoamDeep: sel => sel.snowFoam === 'deep'
   };
 
+  /* app.js declares this object before this compatibility file loads. Replace its
+     coating vocabulary with the final vocabulary agreed for the application. */
+  Object.keys(CONDITIONAL_PREDICATES).forEach(key => {
+    if(key === 'noTurtle' || key === 'noTouchon') delete CONDITIONAL_PREDICATES[key];
+  });
   Object.assign(CONDITIONAL_PREDICATES, predicates);
 
   function resolveInfoArray(value, sel){
@@ -108,9 +116,8 @@
       .filter(item => item !== null && item !== undefined && item !== '');
   }
 
-  /* app.js already renders body arrays correctly. Its warning renderer expects a single
-     string, though, so wrap buildCarousel and resolve warning arrays in exactly the same
-     ordered-item fashion. */
+  /* app.js already handles body arrays. Its warning renderer expects a single string,
+     so resolve warning arrays temporarily before buildCarousel renders them. */
   const oldBuildCarousel = buildCarousel;
   buildCarousel = function(){
     if(!currentSchedule) return oldBuildCarousel();
