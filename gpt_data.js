@@ -1,4 +1,4 @@
-/* GPT application data foundation.
-   The existing constants.js / MASTER_STEPS remains the authoritative content source.
-   This file deliberately contains no duplicated wash instructions. */
-window.GPT_WASH_APP={version:'1.0',storageKey:'austral_wash_log',masterSource:'MASTER_STEPS'};
+/* GPT Austral Wash Bay — data bridge. MASTER_STEPS remains authoritative. */
+window.GPT_WASH_APP={version:'1.1',storageKey:'austral_wash_log',masterSource:'MASTER_STEPS',rules:{washCycleDays:10,turtleDays:180,touchonDays:40,turtleEarlyDays:30,touchonWarningDays:14,touchonCriticalDays:7,minRain:5,maxRain:15}};
+window.GPT_STORE={getLog(){try{return JSON.parse(localStorage.getItem(this.key())||'[]')}catch(e){return[]}},key(){return window.GPT_WASH_APP.storageKey},saveLog(x){localStorage.setItem(this.key(),JSON.stringify(x))},last(type){return this.getLog().filter(x=>!type||x.coating===type).sort((a,b)=>new Date(b.date)-new Date(a.date))[0]||null}};
+window.GPT_HELPERS={daysSince(date){if(!date)return null;return Math.max(0,Math.floor((Date.now()-new Date(date).getTime())/86400000))},remaining(date,target){const d=this.daysSince(date);return d===null?null:target-d},state(rem,soon,critical){if(rem===null)return'never';if(rem<=0)return'overdue';if(rem<=critical)return'critical';if(rem<=soon)return'soon';return'ok'},escape(x){return String(x??'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}};
