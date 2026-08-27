@@ -129,7 +129,7 @@
       return {
         key: 'touchon',
         text: turtleSafe.blocked
-          ? `Touch-On is due, but Turtle Wax cannot safely be applied until ${turtleSafe.daysUntilSafe} more day${turtleSafe.daysUntilSafe === 1 ? '' : 's'} after the last Touch-On.`
+          ? `Touch-On is due soon, but Turtle Wax cannot safely be applied until ${turtleSafe.daysUntilSafe} more day${turtleSafe.daysUntilSafe === 1 ? '' : 's'} after the last Touch-On.`
           : 'Touch-On is due — apply the ceramic top-up now.'
       };
     }
