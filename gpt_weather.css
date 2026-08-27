@@ -1,0 +1,24 @@
+/* Dedicated circular weather instrument.
+   Loaded after gpt_styles.css so these rules safely override the generic
+   weather layout without requiring changes to the main stylesheet. */
+
+.weather-instrument{position:relative;width:min(190px,100%);aspect-ratio:1;display:grid;place-items:center;justify-self:center;overflow:visible!important}
+.weather-hours-ring{position:absolute;inset:0!important;display:block!important;border-radius:50%;border:1px solid #374057;background:radial-gradient(circle at 50% 50%,transparent 48%,#151a2730 50%,#0b0e1622 100%);box-shadow:inset 0 0 30px #0007,0 0 34px #37d7ff18;overflow:visible!important}
+.weather-hours-ring:before{content:"";position:absolute;inset:7px;border-radius:50%;border:2px dashed #37d7ff38;animation:weatherOrbit 24s linear infinite;pointer-events:none}
+.weather-hours-ring:after{content:"";position:absolute;inset:18px;border-radius:50%;border:1px solid #ffffff12;pointer-events:none}
+.weather-hours-ring span{position:absolute!important;left:50%!important;top:50%!important;width:38px!important;height:auto!important;display:grid!important;place-items:center!important;gap:2px!important;text-align:center;font-size:.48rem;line-height:1.05;color:#aeb8cb;transform:rotate(calc(var(--slot)*72deg)) translateY(-76px) rotate(calc(var(--slot)*-72deg)) translate(-50%,-50%)!important;z-index:5;background:transparent!important;border:0!important;overflow:visible!important}
+.weather-hours-ring span i{display:block;font-style:normal;font-size:1rem;line-height:1;color:#dbeeff;text-shadow:0 0 14px #37d7ff88}
+.weather-hours-ring span b{display:block;font-size:.48rem;color:#fff;font-weight:900;white-space:nowrap}
+.weather-hours-ring span small{display:block;font-size:.42rem;color:#8f99ad;white-space:nowrap}
+.weather-now{position:relative;z-index:8}
+.weather-now:before{content:"";position:absolute;inset:-7px;border-radius:50%;border:2px solid #37d7ff55;box-shadow:0 0 18px #37d7ff33;pointer-events:none}
+.weather-now:after{content:"";position:absolute;inset:-13px;border-radius:50%;border:1px solid #37d7ff24;pointer-events:none}
+@keyframes weatherOrbit{to{transform:rotate(360deg)}}
+
+@media(max-width:620px){
+  .weather-instrument{width:150px}
+  .weather-hours-ring span{width:32px!important;transform:rotate(calc(var(--slot)*72deg)) translateY(-60px) rotate(calc(var(--slot)*-72deg)) translate(-50%,-50%)!important;font-size:.42rem}
+  .weather-hours-ring span i{font-size:.82rem}
+  .weather-hours-ring span b{font-size:.42rem}
+  .weather-hours-ring span small{font-size:.38rem}
+}
